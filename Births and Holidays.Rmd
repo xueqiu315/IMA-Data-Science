@@ -1,0 +1,110 @@
+---
+title: "Births and Holidays"
+author: "Xiao Wang"
+date: "2017年1月25日"
+output: html_document
+---
+
+```{r include = FALSE} 
+# don't print this part
+library(dplyr)
+library(ggplot2)
+data(Birthdays, package = "mosaicData")
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r}
+#View(Birthdays)
+```
+
+```{r}
+DailyBirths <-
+  Birthdays %>%
+  group_by(date) %>%
+  # only variable is date, kill everything else
+  summarise(num = sum(births))
+```
+
+```{r}
+DailyBirths %>%   
+  ggplot(aes(x = date, y = num)) + geom_point()
+```
+
+```{r}
+DailyBirths %>%
+  # could also library(lubridate) in the very beginning
+  mutate(year = lubridate::year(date), 
+         week = lubridate::week(date)) %>% 
+  group_by(week, year) %>%
+  #group_by(week) %>% 
+  summarise(week_sum = sum(num)) %>% 
+  ggplot(aes(color = year, x = week, y = week_sum)) + geom_point()
+  #ggplot(aes(x = week, y = week_sum)) + geom_point()
+```
+
+```{r}
+DailyBirths %>%
+  mutate(month = lubridate::month(date)) %>%
+  group_by(month) %>% 
+  summarise(month_sum = sum(num)) %>%
+  ggplot(aes(x = month, y = month_sum)) + geom_point()
+```
+
+```{r}
+DailyBirths %>%
+  mutate(jday = lubridate::yday(date)) %>%
+  group_by(jday) %>% 
+  summarise(jday_sum = sum(num)) %>%
+  ggplot(aes(x = jday, y = jday_sum)) + geom_point()
+```
+
+```{r}
+DailyBirths %>%
+  mutate(wday = lubridate::wday(date, label=TRUE)) %>%
+  group_by(wday) %>% 
+  summarise(wday_sum = sum(num)) %>%
+  ggplot(aes(x = wday, y = wday_sum)) + geom_point()
+```
+
+```{r cache}
+# when compile, don't import the data again
+Holiday <-
+  read.csv("http://tiny.cc/dcf/US-Holidays.csv", stringsAsFactors = FALSE) %>%
+  mutate(date = as.POSIXct(lubridate::dmy(date)), wday = lubridate::wday(date, label=TRUE)) %>% 
+  filter(year == 1987 | year == 1988)
+```
+
+```{r}
+MyTwoYear <-
+  Birthdays %>%
+  filter(year == 1987 | year == 1988)
+  # filter(year(date) %in% c(1987, 1988))
+```
+
+```{r}
+# don't use Holiday$holiday!
+# each layer could has its own data, when change dataset to Holiday, specify all parameters in aes again if they are different from the one in MyTwo Year, like y = 10000!
+MyTwoYear %>% 
+  group_by(date) %>%
+  summarise(num = sum(births)) %>%
+  mutate(wday = lubridate::wday(date, label = TRUE)) %>%
+  # couldn't use mutate(wday <- balabala...)
+  # if there is no label=TRUE, then color is smoothly changing, different blue
+  ggplot(aes(x = date, y = num)) + 
+  geom_line(aes(color = wday)) + geom_point(aes(color = wday),size = 0) +
+  geom_vline(data = Holiday, aes(color = wday, xintercept = as.numeric(date)), alpha = 0.4) + 
+  geom_text(data = Holiday, aes(x = date, y = 10000, color = NULL, label = holiday), angle = 70, size = 3, alpha = 0.7) + ylab("Total Births") + xlab("")
+  # geom_text resets the frame, so need to specify Holiday to be 1987-1988 as well!
+  # geom_vline doesn't reset the fame, thought!
+  # transparent doesn't distract you from the text!
+```
+
+
+```{r}
+MyTwoYear %>% 
+  group_by(date) %>%
+  summarise(num = sum(births)) %>%
+  mutate(wday = lubridate::wday(date, label=TRUE), is_holiday = date%in%Holiday$date, is_weekend = ((wday == "Sun") | (wday == "Sat")) ) %>%
+  ggplot(aes(x = date, y = num, color = is_holiday, shape = is_weekend)) + geom_point()
+```
