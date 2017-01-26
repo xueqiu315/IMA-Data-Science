@@ -1,0 +1,73 @@
+---
+title: "Voting"
+author: "Xiao Wang"
+date: "2017年1月24日"
+output: html_document
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(printr)
+# the following is how to install DataComputing package
+# devtools::install_github("DataComputing/DataComputing")
+library(DataComputing)
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r}
+head(Minneapolis2013)
+```
+```{r}
+nrow(Minneapolis2013)
+Minneapolis2013 %>%
+  group_by(Second) %>%
+  tally() %>%
+  arrange(desc(n))
+```
+
+```{r}
+Minneapolis2013 %>%
+  count(First == 'undervote') 
+Minneapolis2013 %>%
+  count(Second == 'undervote') 
+Minneapolis2013 %>%
+  filter(Third == 'undervote') %>%
+  tally()
+```
+
+```{r}
+Minneapolis2013 %>%
+  summarise(in_first = sum(First == 'undervote'),
+            in_second = sum(Second == 'undervote'),
+            in_third = sum(Third == 'undervote'))
+```
+
+```{r}
+M.sub <-
+  subset(Minneapolis2013, First == 'BETSY HODGES')
+```
+
+```{r}
+Minneapolis2013 %>%
+  filter(First == 'BETSY HODGES') %>%
+  group_by(Second) %>%
+  tally() %>%
+  arrange(desc(n))
+```
+
+```{r}
+Minneapolis2013 %>%
+  group_by(Precinct) %>%
+  summarise(frac = mean(First == 'undervote')) %>%
+  # OR summarise(uvotes = sum(First == 'undervote'),total = n())  %>%
+  # mutate(frac = uvotes/total)
+  arrange(desc(frac)) %>%
+  head(3)
+
+  #tally() %>%  after tally NO FIRST AGAIN!!!
+  #mutate(total = n()) %>%
+  #filter(First == 'undervote')
+  #summarise(frac = count(First == 'undervote')/n)
+```
