@@ -1,0 +1,45 @@
+---
+title: "Runners"
+author: "Xiao Wang"
+date: "2017年1月24日"
+output: html_document
+---
+
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(printr)
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r}
+Runners <- read.csv("http://tiny.cc/mosaic/repeat-runners.csv",
+                    stringsAsFactors = FALSE)
+names(Runners)
+```
+
+```{r}
+Runners %>%
+  filter(sex == 'F') %>%
+  tally()
+```
+
+```{r}
+Runners %>%
+  summarise(fn = sum(sex == 'F'), mn = sum(sex == 'M'))
+```
+
+```{r}
+Sex_year <-
+  Runners %>%
+  group_by(sex, year) %>%
+  summarise(m_age = mean(age))
+```
+
+```{r}
+Sex_year %>%
+  ggplot(aes(x = year, y = m_age, color = sex)) +
+  geom_point() + geom_line() 
+```
