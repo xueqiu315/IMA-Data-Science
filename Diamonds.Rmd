@@ -1,0 +1,29 @@
+---
+title: "Diamond"
+author: "Xiao Wang"
+date: "2017年1月24日"
+output: html_document
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(printr)
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r}
+diamonds %>%
+  group_by(color) %>%
+  summarise(c = mean(carat, na.rm=TRUE)) %>%
+  arrange(desc(c))
+```
+
+```{r}
+diamonds %>%
+  group_by(clarity) %>%
+  mutate(atpc=table/carat) %>%
+  summarise(c = mean(atpc, na.rm=TRUE))  %>%
+  arrange(desc(c))
+```
