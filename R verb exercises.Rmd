@@ -1,0 +1,50 @@
+---
+title: "R verbs exercises"
+author: "Xiao Wang"
+date: "2017年1月24日"
+output: html_document
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+#library(mosaic)    # or
+data(Galton, package = "mosaicData")
+```
+
+```{r}
+Tmp <-
+  Galton %>%
+  group_by(sex) 
+nrow(Galton)
+nrow(Tmp)
+names(Galton)
+names(Tmp)
+head(Galton)
+head(Tmp)
+```
+
+The point of 'group_by()' is to set up other data verbs to work on a group-by-group basis.
+
+Example: "summarise()" reduces many cases to a single case.
+
+```{r}
+Galton %>%
+  summarise(mheight = mean(height/sqrt(nkids)),
+            m_mother = median(mother),
+            s_father = sd(father),
+            ncases = n())
+```
+
+Now divide into groups by sex and nkids.
+```{r}
+Galton %>%
+  group_by(sex, nkids) %>%
+  summarise(mheight = mean(height/sqrt(nkids)),
+            ncases = n()) %>%
+  arrange(desc(nkids))
+```
+
+```{r}
+Galton %>% tally
+```
