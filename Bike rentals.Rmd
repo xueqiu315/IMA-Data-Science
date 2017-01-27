@@ -1,0 +1,45 @@
+---
+title: "Bike Rentals"
+author: "Xiao Wang"
+date: "2017年1月27日"
+output: html_document
+---
+
+```{r include = FALSE} 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r cache = TRUE}
+data_site <- "http://tiny.cc/dcf/2014-Q4-Trips-History-Data-Small.rds"
+Trips <- readRDS(gzcon(url(data_site)))
+```
+
+```{r}
+Trips %>% 
+  ggplot(aes(x = sdate)) + geom_density()
+```
+
+```{r}
+Trips %>%
+  mutate(time_of_day = lubridate::hour(sdate) 
+         + lubridate::minute(sdate) / 60) %>%
+  ggplot(aes(x = time_of_day)) + geom_density()
+```
+
+```{r}
+Trips %>%
+  mutate(time_of_day = lubridate::hour(sdate) 
+         + lubridate::minute(sdate) / 60, wday = lubridate::wday(sdate, label = TRUE)) %>%
+  ggplot(aes(x = time_of_day)) + geom_density(aes(fill = client), color = NA, alpha = 0.4, position = position_stack()) + facet_wrap(~wday)
+```
+
+```{r}
+Trips %>%
+  mutate(time_of_day = lubridate::hour(sdate) 
+         + lubridate::minute(sdate) / 60, wday = ifelse(lubridate::wday(sdate) %in% c(1,7), "weekend", "weekday")) %>%
+  ggplot(aes(x = time_of_day)) + geom_density(aes(fill = client), color = NA, alpha = 0.4) + facet_grid(wday ~ .)
+```
