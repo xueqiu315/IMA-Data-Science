@@ -1,0 +1,46 @@
+---
+title: "Economist"
+author: "Xiao Wang"
+date: "2017年1月26日"
+output: html_document
+---
+
+```{r include = FALSE} 
+# don't print this part
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+#data(Birthdays, package = "mosaicData")
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r cache}
+download.file("http://tiny.cc/dcf/ScorecardSmall.Rda", destfile = "ScorecardSmall.Rda")
+load("ScorecardSmall.Rda")
+download.file("http://tiny.cc/dcf/NPT4-names.csv", destfile = "NPT4-names.csv")
+MyName <- read.csv("NPT4-names.csv")
+```
+
+```{r}
+MyData <- 
+  ScorecardSmall %>% 
+  filter(CONTROL == "1" | CONTROL == "2") %>% 
+  # filter(CONTROL %in$ c(1,2))
+  select(INSTNM, ADM_RATE, CONTROL, NPT41_PUB,NPT42_PUB,NPT43_PUB,NPT44_PUB,NPT45_PUB,NPT41_PRIV,NPT42_PRIV,NPT43_PRIV,NPT44_PRIV,NPT45_PRIV) %>% 
+  gather(long_name, real_cost, NPT41_PUB:NPT45_PRIV) %>%
+  mutate(cost = real_cost/1000) %>% 
+  mutate(adm = ADM_RATE*100) %>% 
+  inner_join(MyName)
+```
+```{r}
+MyData %>% 
+  filter(short_name == "Q1" | short_name == "Q3" | short_name == "Q5") %>% 
+  ggplot(aes(x = adm, y = cost), na.rm=TRUE) + geom_point(color="blue", alpha = 0.3, na.rm=TRUE) +
+  facet_grid(CONTROL ~ short_name, labeller = label_context) + geom_smooth(na.rm=TRUE) + 
+  xlab("Admissions rate, %") + ylab("Net cost per year, $'000") +
+  xlim(0,100) + ylim(0,50)
+```
+
+# only lower right has negative slope
+# very good college(low adm rate) has high cost!
