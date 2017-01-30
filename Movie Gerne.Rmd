@@ -1,0 +1,75 @@
+---
+title: "Movie Genres"
+author: "Xiao Wang"
+date: "2017年1月27日"
+output: html_document
+---
+
+```{r include = FALSE} 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+knitr::opts_chunk$set(echo=FALSE, message = FALSE)
+options(digits=2)
+```
+
+```{r}
+# download.file("http://tiny.cc/dcf/MovieLens.rda", destfile = "MovieLens.rda")
+```
+
+```{r}
+load("MovieLens.rda")
+```
+
+```{r}
+MyMovies <- 
+  Movies %>% 
+  inner_join(Ratings) %>% 
+  inner_join(Users)
+```
+
+```{r}
+MyMovies1 <-  
+  MyMovies %>% 
+  select(movie_id, movie_title, unknown:Western, user_id, rating, sex) %>%
+  gather(genre, belong_or_not, unknown:Western) %>% 
+  #filter(genre == "Western", sex == "F") %>% 
+  group_by(genre, sex) %>% 
+  filter(belong_or_not == TRUE) %>% 
+  summarise(rating_count = n(), 
+         rating_ave = mean(rating, na.rm=TRUE), 
+         rating_se = sd(rating)/sqrt(n())) 
+```
+
+```{r}
+MyMovies1 %>% 
+  ggplot(aes(x = genre, y = rating_ave, color = sex)) +
+  geom_point() + geom_line(aes(group = sex)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1)) +
+  ylim(c(0,5))
+```
+
+# Error Bar
+```{r}
+MyMovies1 %>% 
+  # position by default is "stack"
+  select(sex, rating_ave, genre) %>% 
+  spread(sex, rating_ave) %>% 
+  mutate(diff = M-F, sign = sign(diff)) %>% 
+  # we want people to see related variation
+  # so reorder x axis(genre) increasingly by diff
+  ggplot(aes(x = reorder(genre, diff), y = diff, fill = diff)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  ylab("Rating Difference between Male and Female (M-F)") +
+  xlab("Genre") + 
+  guides(fill = FALSE)    # to turn off the fill/color icon
+```
+
+```{r}
+MyMovies1 %>% 
+  # color = sex means just the outline is colored, not the whole bar
+  ggplot(aes(x = genre, y = rating_count, fill = sex)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+```
